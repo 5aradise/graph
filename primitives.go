@@ -74,8 +74,8 @@ func drawArrow(c *fyne.Container, size float32, I, O fyne.Position, color color.
 func draw2SidedArrow(c *fyne.Container, size float32, sP, eP fyne.Position, color color.RGBA, width float32) {
 	v := getVector(sP, eP)
 	h := fyne.NewPos(-v.Y, v.X)
-	s1P := sumPos(sP, scalarPos(h, 3, 3))
-	e1P := sumPos(eP, scalarPos(h, 3, 3))
+	s1P := sumPos(sP, scalarPos(h, size/5))
+	e1P := sumPos(eP, scalarPos(h, size/5))
 	drawLine(c, s1P, e1P, color, width)
 	drawArrow(c, size, s1P, e1P, color, width)
 }

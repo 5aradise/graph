@@ -20,11 +20,10 @@ type edge struct {
 	typ   uint8
 }
 
-func newEdge(verts []vertex, start, end *vertex, vertR float32, dir bool) edge {
+func newEdge(verts []vertex, start, end *vertex, isTwoCons bool, vertR float32, dir bool) edge {
 	if start.num == end.num {
 		return edge{start, end, dir, Loop}
 	}
-	isTwoCons := isTwoConnections(*start, *end)
 	if isVertexBetween(verts, start.pos, end.pos, vertR) {
 		if start.num > end.num && !isTwoCons {
 			return edge{start, end, dir, ArcR}
@@ -61,7 +60,7 @@ func setEdges(verts []vertex, vertR float32, m [][]uint8, isDir bool) {
 		for vert := range m {
 			for rel := range m[vert] {
 				if m[vert][rel] == 1 {
-					edge := newEdge(verts, &verts[vert], &verts[rel], vertR, isDir)
+					edge := newEdge(verts, &verts[vert], &verts[rel], m[rel][vert] == 1, vertR, isDir)
 					verts[vert].edges = append(verts[vert].edges, &edge)
 				}
 			}
@@ -72,18 +71,9 @@ func setEdges(verts []vertex, vertR float32, m [][]uint8, isDir bool) {
 	for vert := range verts {
 		for rel := 0; rel < vert+1; rel++ {
 			if m[vert][rel] == 1 {
-				edge := newEdge(verts, &verts[vert], &verts[rel], vertR, isDir)
+				edge := newEdge(verts, &verts[vert], &verts[rel], false, vertR, isDir)
 				verts[vert].edges = append(verts[vert].edges, &edge)
 			}
 		}
 	}
-}
-
-func isTwoConnections(start, end vertex) bool {
-	for _, edge := range end.edges {
-		if edge.end.num == start.num {
-			return true
-		}
-	}
-	return false
 }
