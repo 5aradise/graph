@@ -28,21 +28,6 @@ func (g *graph) BFS(color color.RGBA) ([][]uint8, []int) {
 	return getPathMetrics(len(g.verts), path)
 }
 
-func vertBFSt(toCheck *[]*vertex, path *[]drawer, visited map[int]bool) {
-	currCheck := make([]*vertex, len(*toCheck))
-	copy(currCheck, *toCheck)
-	*toCheck = nil
-	for _, vert := range currCheck {
-		for _, edge := range vert.edges {
-			if _, ok := visited[edge.end.num]; !ok {
-				visited[edge.end.num] = true
-				*path = append(*path, *edge, *edge.end)
-				*toCheck = append(*toCheck, edge.end)
-			}
-		}
-	}
-}
-
 func vertBFS(vert vertex, path *[]drawer, visited map[int]bool) {
 	toCheck := vert.edges
 	for len(toCheck) != 0 {
