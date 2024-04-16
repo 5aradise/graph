@@ -5,19 +5,21 @@ import (
 	"math"
 )
 
+type shape uint8
+
 const (
-	Line   uint8 = 1
-	Loop   uint8 = 2
-	ArcL   uint8 = 3
-	ArcR   uint8 = 4
-	Double uint8 = 5
+	Line   shape = 1
+	Loop   shape = 2
+	ArcL   shape = 3
+	ArcR   shape = 4
+	Double shape = 5
 )
 
 type edge struct {
 	start *vertex
 	end   *vertex
 	dir   bool
-	typ   uint8
+	shape shape
 }
 
 func newEdge(verts []vertex, start, end *vertex, isTwoCons bool, vertR float32, dir bool) edge {
@@ -38,7 +40,7 @@ func newEdge(verts []vertex, start, end *vertex, isTwoCons bool, vertR float32, 
 
 func (e edge) draw(g *graph, color color.RGBA, width float32) {
 	dirV := getVector(e.start.pos, e.end.pos)
-	switch e.typ {
+	switch e.shape {
 	case Line:
 		drawLine(g.c, sumPos(e.start.pos, scalarPos(dirV, g.vertR)), sumPos(e.end.pos, scalarPos(dirV, -g.vertR)), color, width)
 		if e.dir {
