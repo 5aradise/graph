@@ -3,7 +3,6 @@ package graph
 import (
 	"image/color"
 	"math"
-	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -23,18 +22,10 @@ func (v vertex) draw(g *graph, colorV color.RGBA, width float32) {
 	body.Position2 = fyne.NewPos(v.pos.X+g.vertR, v.pos.Y+g.vertR)
 
 	g.c.Add(body)
-
-	titlePos := fyne.NewPos(v.pos.X, v.pos.Y-g.vertR/0.95)
-	if v.num < 10 {
-		titlePos.X -= g.vertR / 2.2
-	} else {
-		titlePos.X -= g.vertR / 1.15
-	}
-
-	DrawText(g.c, g.vertR, titlePos, strconv.Itoa(v.num), colorV)
+	DrawFormattedNum(g.c, g.vertR, v.pos, v.num, colorV)
 }
 
-func createVertices(g *graph, m [][]uint8) []vertex {
+func createVertices(g *graph, m [][]int) []vertex {
 	verts := make([]vertex, len(m))
 
 	for i := range verts {

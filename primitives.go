@@ -4,6 +4,7 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
+	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -14,7 +15,7 @@ const (
 	Right = true
 )
 
-func drowArc(c *fyne.Container, size float32, sP, eP fyne.Position, side bool, isDir bool, color color.RGBA, width float32) {
+func drowArc(c *fyne.Container, size float32, sP, eP fyne.Position, side bool, isDir bool, color color.RGBA, width float32, text ...int) {
 	var k float32 = 1.25
 	v := getVector(sP, eP)
 	sfi := -math.Pi / float64(3-k/4)
@@ -38,9 +39,13 @@ func drowArc(c *fyne.Container, size float32, sP, eP fyne.Position, side bool, i
 	if isDir {
 		drawArrow(c, size, e1P, eP, color, width)
 	}
+	if len(text) != 0 {
+		textP := sumPos(mP, scalarPos(rotateVector(v, math.Pi/2), size/3))
+		DrawFormattedNum(c, size/4, textP, text[0], color)
+	}
 }
 
-func drawLoop(c *fyne.Container, size float32, iP fyne.Position, isDir bool, color color.RGBA, width float32) {
+func drawLoop(c *fyne.Container, size float32, iP fyne.Position, isDir bool, color color.RGBA, width float32, text ...int) {
 	fi := rand.Float64() * 2 * math.Pi
 	sV := rotateVector(fyne.NewPos(1, 0), fi)
 	mV := rotateVector(sV, math.Pi/6)
@@ -55,6 +60,10 @@ func drawLoop(c *fyne.Container, size float32, iP fyne.Position, isDir bool, col
 	drawLine(c, eP, sumPos(iP, scalarPos(eV, size)), color, width)
 	if isDir {
 		drawArrow(c, size, eP, sumPos(iP, scalarPos(eV, size)), color, width)
+	}
+	if len(text) != 0 {
+		textP := sumPos(iP, scalarPos(mV, 2*size))
+		DrawFormattedNum(c, size/4, textP, text[0], color)
 	}
 }
 
@@ -71,23 +80,41 @@ func drawArrow(c *fyne.Container, size float32, I, O fyne.Position, color color.
 	drawLine(c, O, R3, color, widthL)
 }
 
-func draw2SidedArrow(c *fyne.Container, size float32, sP, eP fyne.Position, color color.RGBA, width float32) {
+func draw2SidedArrow(c *fyne.Container, size float32, sP, eP fyne.Position, color color.RGBA, width float32, text ...int) {
 	v := getVector(sP, eP)
 	h := fyne.NewPos(-v.Y, v.X)
 	s1P := sumPos(sP, scalarPos(h, size/5))
 	e1P := sumPos(eP, scalarPos(h, size/5))
-	drawLine(c, s1P, e1P, color, width)
+	drawLine(c, s1P, e1P, color, width, text...)
 	drawArrow(c, size, s1P, e1P, color, width)
 }
 
-func drawLine(c *fyne.Container, startP, endP fyne.Position, color color.RGBA, width float32) {
+func drawLine(c *fyne.Container, startP, endP fyne.Position, color color.RGBA, width float32, text ...int) {
 	line := canvas.NewLine(color)
 	line.StrokeWidth = 1
 	line.StrokeWidth = width
 	line.Position1 = startP
 	line.Position2 = endP
 
+	if len(text) != 0 {
+		textP := sumPos(scalarPos(sumPos(startP, endP), 0.5), scalarPos(rotateVector(getVector(startP, endP), math.Pi/2), 8))
+		DrawFormattedNum(c, 8, textP, text[0], color)
+	}
+
 	c.Add(line)
+}
+
+func DrawFormattedNum(c *fyne.Container, size float32, pos fyne.Position, num int, color color.RGBA) {
+	formatPos := fyne.NewPos(pos.X, pos.Y-size/0.95)
+	if num >= 100 {
+		formatPos.X -= size / 0.8
+	} else if num >= 10 {
+		formatPos.X -= size / 1.15
+	} else {
+		formatPos.X -= size / 2.2
+	}
+
+	DrawText(c, size, formatPos, strconv.Itoa(num), color)
 }
 
 func DrawText(c *fyne.Container, size float32, pos fyne.Position, text string, color color.RGBA) {

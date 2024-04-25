@@ -8,23 +8,23 @@ type number interface {
 		~float32 | ~float64
 }
 
-func RandAdjDirMatrix(size int, k float64, r *rand.Rand) [][]uint8 {
-	dirM := make([][]uint8, size)
-	for i := range dirM {
-		dirM[i] = make([]uint8, size)
-		for j := range dirM[i] {
-			dirM[i][j] = uint8(2 * r.Float64() * k)
+func RandIntMatrix(size int, k float64, r *rand.Rand) [][]int {
+	m := make([][]int, size)
+	for i := range m {
+		m[i] = make([]int, size)
+		for j := range m[i] {
+			m[i][j] = int(r.Float64() * k)
 		}
 	}
-	return dirM
+	return m
 }
 
-func DirToUndir(dirM [][]uint8) [][]uint8 {
+func DirToUndir(dirM [][]int) [][]int {
 	size := len(dirM)
-	undirM := make([][]uint8, size)
+	undirM := make([][]int, size)
 	for i := range undirM {
-		undirM[i] = make([]uint8, size)
-		for j := range i {
+		undirM[i] = make([]int, size)
+		for j := range i + 1 {
 			if dirM[i][j] == 1 || dirM[j][i] == 1 {
 				undirM[i][j] = 1
 				undirM[j][i] = 1
@@ -34,10 +34,10 @@ func DirToUndir(dirM [][]uint8) [][]uint8 {
 	return undirM
 }
 
-func composeM(m1, m2 [][]uint8) [][]uint8 {
-	mc := make([][]uint8, len(m1))
+func composeM[N number](m1, m2 [][]N) [][]N {
+	mc := make([][]N, len(m1))
 	for row1 := range m1 {
-		mc[row1] = make([]uint8, len(m1))
+		mc[row1] = make([]N, len(m1))
 		for col1 := range m1[row1] {
 			for col2 := range m2[col1] {
 				mc[row1][col2] += m1[row1][col1] * m2[col1][col2]
@@ -47,7 +47,7 @@ func composeM(m1, m2 [][]uint8) [][]uint8 {
 	return mc
 }
 
-func addM[N number](sum, adder [][]N) {
+func AddM[N number](sum, adder [][]N) {
 	for row, sumRow := range sum {
 		for col := range sumRow {
 			sumRow[col] += adder[row][col]
@@ -55,10 +55,18 @@ func addM[N number](sum, adder [][]N) {
 	}
 }
 
-func multM[N number](mult, multer [][]N) {
+func MultM[N number](mult, multer [][]N) {
 	for row, multRow := range mult {
 		for col := range multRow {
 			multRow[col] *= multer[row][col]
+		}
+	}
+}
+
+func ScalarM[N number](mult [][]N, multer N) {
+	for _, multRow := range mult {
+		for col := range multRow {
+			multRow[col] *= multer
 		}
 	}
 }
@@ -75,11 +83,11 @@ func transM[T any](m [][]T) [][]T {
 	return t
 }
 
-func toBinM[N number](m [][]N) [][]uint8 {
+func ToBinM[N number](m [][]N) [][]int {
 	size := len(m)
-	bin := make([][]uint8, size)
+	bin := make([][]int, size)
 	for i := range bin {
-		bin[i] = make([]uint8, size)
+		bin[i] = make([]int, size)
 		for j := range bin[i] {
 			if m[i][j] != 0 {
 				bin[i][j] = 1
@@ -89,10 +97,10 @@ func toBinM[N number](m [][]N) [][]uint8 {
 	return bin
 }
 
-func identM[N uint8](size int) [][]uint8 {
-	ident := make([][]uint8, size)
+func identM(size int) [][]int {
+	ident := make([][]int, size)
 	for i := range ident {
-		ident[i] = make([]uint8, size)
+		ident[i] = make([]int, size)
 		ident[i][i] = 1
 	}
 	return ident

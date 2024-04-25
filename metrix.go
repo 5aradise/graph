@@ -1,24 +1,37 @@
 package graph
 
-func Deg(adjM [][]uint8) (degs, halfDegs [][]uint8) {
-	degrees := make([][]uint8, 3)
-	for i := range degrees {
-		degrees[i] = make([]uint8, len(adjM))
+func Deg(adjM [][]int, isDir bool) (degs, halfDegs [][]int) {
+	if isDir {
+		degrees := make([][]int, 3)
+		for i := range degrees {
+			degrees[i] = make([]int, len(adjM))
+		}
+		for vert, rels := range adjM {
+			for rel, relation := range rels {
+				if relation == 1 {
+					degrees[0][vert]++
+					degrees[0][rel]++
+					degrees[1][vert]++
+					degrees[2][rel]++
+				}
+			}
+		}
+		return degrees[:1], degrees[1:3]
 	}
-	for vert, rels := range adjM {
-		for rel, relation := range rels {
-			if relation == 1 {
+	degrees := make([][]int, 1)
+	degrees[0] = make([]int, len(adjM))
+	for vert := range adjM {
+		for rel := range vert + 1 {
+			if adjM[vert][rel] == 1 {
 				degrees[0][vert]++
 				degrees[0][rel]++
-				degrees[1][vert]++
-				degrees[2][rel]++
 			}
 		}
 	}
-	return degrees[:1], degrees[1:3]
+	return degrees, nil
 }
 
-func HomoDeg(degs [][]uint8) (uint8, bool) {
+func HomoDeg(degs [][]int) (int, bool) {
 	check := degs[0][0]
 	for _, vert := range degs[0] {
 		if vert != check {
@@ -28,7 +41,7 @@ func HomoDeg(degs [][]uint8) (uint8, bool) {
 	return check, true
 }
 
-func IsolHang(degs [][]uint8) (isol, hang []int) {
+func IsolHang(degs [][]int) (isol, hang []int) {
 	for vert, deg := range degs[0] {
 		if deg == 0 {
 			isol = append(isol, vert+1)
@@ -40,7 +53,7 @@ func IsolHang(degs [][]uint8) (isol, hang []int) {
 	return
 }
 
-func Path(m [][]uint8, pathLen int) [][]int {
+func Path(m [][]int, pathLen int) [][]int {
 	paths := make([][]int, 0)
 	pathCountM := adjDeg(m, pathLen)
 	usePathCount(pathCountM)
@@ -75,7 +88,34 @@ func createPath(start int, edges [][2]int, pathLen int) [][]int {
 	return pathsWithStart
 }
 
-func getEdges(m [][]uint8) [][2]int {
+func Path2(m [][]int) [][]int {
+	paths := make([][]int, 0)
+	m2 := adjDeg(m, 2)
+	for start, consLen2 := range m2 {
+		for end, conLen2 := range consLen2 {
+			if conLen2 != 0 {
+				var pathCount int = 0
+			endLoop:
+				for mid, stmi := range m[start] {
+					if stmi != 0 {
+						for _, mien := range m[mid] {
+							if mien != 0 {
+								paths = append(paths, []int{start + 1, mid + 1, end + 1})
+								pathCount++
+								if pathCount == conLen2 {
+									break endLoop
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return paths
+}
+
+func getEdges(m [][]int) [][2]int {
 	edges := make([][2]int, 0)
 	for vert, rels := range m {
 		for vertRel, rel := range rels {
@@ -88,11 +128,11 @@ func getEdges(m [][]uint8) [][2]int {
 	return edges
 }
 
-func usePathCount(m [][]uint8) {
+func usePathCount(m [][]int) {
 	clear(m)
 }
 
-func adjDeg(m [][]uint8, deg int) [][]uint8 {
+func adjDeg(m [][]int, deg int) [][]int {
 	degM := composeM(m, m)
 	for i := 0; i < deg-2; i++ {
 		degM = composeM(degM, m)
@@ -100,29 +140,29 @@ func adjDeg(m [][]uint8, deg int) [][]uint8 {
 	return degM
 }
 
-func Reachab(m [][]uint8) [][]uint8 {
+func Reachab(m [][]int) [][]int {
 	vertCount := len(m)
-	r := make([][]uint8, vertCount)
-	acum := make([][]uint8, vertCount)
+	r := make([][]int, vertCount)
+	acum := make([][]int, vertCount)
 	copyM(r, m)
 	copyM(acum, m)
 	for i := 1; i < vertCount-1; i++ {
 		acum = composeM(acum, m)
-		addM(r, acum)
+		AddM(r, acum)
 	}
-	addM(r, identM(vertCount))
-	r = toBinM(r)
+	AddM(r, identM(vertCount))
+	r = ToBinM(r)
 	return r
 }
 
-func StrongCon(m [][]uint8) [][]uint8 {
+func StrongCon(m [][]int) [][]int {
 	r := Reachab(m)
 	strongConM := transM(r)
-	multM(strongConM, r)
+	MultM(strongConM, r)
 	return strongConM
 }
 
-func Components(m [][]uint8) ([][]int, map[int]int) {
+func Components(m [][]int) ([][]int, map[int]int) {
 	s := StrongCon(m)
 	comps := make([][]int, 0, len(s))
 	rel := make(map[int]int)
@@ -142,12 +182,12 @@ func Components(m [][]uint8) ([][]int, map[int]int) {
 	return comps, rel
 }
 
-func CondensMatrix(m [][]uint8) [][]uint8 {
+func CondensMatrix(m [][]int) [][]int {
 	ks, vertRelToComp := Components(m)
 	kCount := len(ks)
-	condM := make([][]uint8, kCount)
+	condM := make([][]int, kCount)
 	for k, comp := range ks {
-		condM[k] = make([]uint8, kCount)
+		condM[k] = make([]int, kCount)
 		for _, vertex := range comp {
 			vertexRels := m[vertex-1]
 			for rel, isRel := range vertexRels {
